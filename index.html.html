@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Pro 高級專案甘特圖系統</title>
+    <style>
+        :root {
+            --slate-50: #f8fafc;
+            --slate-100: #f1f5f9;
+            --slate-200: #e2e8f0;
+            --slate-700: #334155;
+            --slate-800: #1e293b;
+            --slate-900: #0f172a;
+            
+            --indigo-50: #e0e7ff;
+            --indigo-600: #4f46e5;
+            --indigo-700: #4338ca;
+            
+            --emerald-50: #dcfce7;
+            --emerald-600: #16a34a;
+            
+            --amber-50: #fef3c7;
+            --amber-600: #d97706;
+            
+            --rose-50: #fee2e2;
+            --rose-600: #dc2626;
+
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #f4f5f7;
+            color: var(--slate-900);
+            padding: 24px;
+            font-size: 14px;
+        }
+
+        .workspace {
+            max-width: 1650px;
+            margin: 0 auto;
+        }
+
+        /* 頂部導覽列 (仿 Jira/Monday 風格) */
+        header {
+            background: #ffffff;
+            padding: 20px 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            border: 1px solid var(--slate-200);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .brand-zone {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-box {
+            background: linear-gradient(135deg, var(--indigo-600), #7c3aed);
+            color: white;
+            width: 38px;
+            height: 38px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .brand-title h1 {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--slate-900);
+        }
+        .brand-title p {
+            font-size: 12px;
+            color: var(--slate-700);
+        }
+
+        /* 數據看版面板 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 18px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--slate-200);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--slate-700);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--slate-900);
+        }
+
+        /* 控制與篩選列 */
+        .control-bar {
+            background: white;
+            padding: 16px 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--slate-200);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .search-filter-zone {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            padding: 8px 14px;
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            outline: none;
+            width: 220px;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            background: white;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .view-switcher {
+            display: flex;
+            background: var(--slate-100);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--slate-200);
+        }
+
+        .view-btn {
+            padding: 6px 16px;
+            border: none;
+            background: transparent;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--slate-700);
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .view-btn.active {
+            background: white;
+            color: var(--indigo-600);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* 主要表單與排程區卡片 */
+        .panel-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--slate-200);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--slate-200);
+            background: var(--slate-50);
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--slate-800);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* 表單設計 */
+        .matrix-form {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-field label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--slate-700);
+        }
+
+        .form-field input, .form-field select {
+            padding: 10px 14px;
+            border: 1px solid var(--slate-200);
+            border-radius: var(--radius-md);
+            outline: none;
+            font-size: 13px;
+        }
+
+        .form-field input:focus, .form-field select:focus {
+            border-color: var(--indigo-600);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+        }
+
+        /* 按鈕系統 */
+        button.action-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-core { background: var(--indigo-600); color: white; }
+        .btn-core:hover { background: var(--indigo-700); }
+        .btn-auxiliary { background: var(--slate-100); color: var(--slate-700); border: 1px solid var(--slate-200); }
+        .btn-auxiliary:hover { background: var(--slate-200); }
+
+        /* 整合式雙視窗結構 (左清單表格 + 右同步滾動甘特圖) */
+        .split-gantt-workspace {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .split-row {
+            display: table-row;
+        }
+
+        .split-cell-left {
+            display: table-cell;
+            width: 550px;
+            vertical-align: top;
+            border-right: 3px solid var(--slate-200);
+            background: white;
+            z-index: 10;
+        }
+
+        .split-cell-right {
+            display: table-cell;
+            vertical-align: top;
+            overflow-x: auto;
+            background: #ffffff;
+        }
+
+        /* 左側工作結構表格 */
+        .wbs-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .wbs-table th, .wbs-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--slate-200);
+            text-align: left;
+            font-size: 13px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .wbs-table th {
+            background: var(--slate-50);
+            font-weight: 600;
+            color: var(--slate-700);
+            height: 48px;
+        }
+
+        .wbs-table tr:hover {
+            background: var(--slate-50);
+        }
+
+        .depth-0 { font-weight: 700; color: var(--slate-900); }
+        .depth-1 { padding-left: 28px; color: #475569; }
+        .depth-2 { padding-left: 48px; color: #64748b; font-style: italic; }
+
+        /* 標籤設計 */
+        .badge-ui {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .badge-task { background: var(--indigo-50); color: var(--indigo-600); }
+        .badge-milestone { background: var(--amber-50); color: var(--amber-600); }
+
+        .priority-high { color: var(--rose-600); font-weight: 600; }
+        .priority-medium { color: var(--amber-600); font-weight: 600; }
+        .priority-low { color: var(--emerald-600); font-weight: 600; }
+
+        /* 右側時間軸甘特表 */
+        .timeline-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        .gantt-core-table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .gantt-core-table th, .gantt-core-table td {
+            border: 1px solid #edf2f7;
+            padding: 0;
+            text-align: center;
+            height: 44px;
+        }
+
+        .gantt-core-table th {
+            background: var(--slate-50);
+            color: var(--slate-700);
+            font-size: 11px;
+            font-weight: 600;
+            height: 48px;
+            padding: 4px 0;
+        }
+
+        .th-date-box {
+            min-width: 48px;
+            width: 48px;
+        }
+        .th-date-box.week-mode {
+            min-width: 90px;
+            width: 90px;
+        }
+
+        .weekend-hdr { background: #f1f5f9; color: #94a3b8; }
+        .weekend-cell { background: #f8fafc; }
+
+        /* 甘特進度條與里程碑元件 */
+        .bar-rel-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .gantt-bar-item {
+            position: absolute;
+            height: 24px;
+            border-radius: 6px;
+            background: var(--indigo-600);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding-left: 8px;
+            z-index: 2;
+            overflow: hidden;
+            transition: width 0.3s ease;
+        }
+        .gantt-bar-item.completed { background: var(--emerald-600); }
+        .gantt-bar-item.pending { background: #94a3b8; }
+
+        .gantt-bar-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.16);
+            z-index: -1;
+        }
+
+        /* 里程碑鑽石設計 */
+        .gantt-milestone-diamond {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: var(--amber-600);
+            transform: rotate(45deg);
+            z-index: 3;
+            box-shadow: var(--shadow-sm);
+        }
+        .gantt-milestone-diamond.completed {
+            background: var(--emerald-600);
+        }
+
+        .dependency-line-text {
+            font-size: 9px;
+            color: var(--slate-700);
+            background: var(--slate-100);
+            padding: 1px 4px;
+            border-radius: 3px;
+            margin-left: 20px;
+            border: 1px solid var(--slate-200);
+            white-space: nowrap;
+        }
+
+        /* 操作按鈕群 */
+        .op-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .op-btn:hover { background: var(--slate-200); }
+    </style>
+</head>
+<body>
+
+<div class="workspace">
+    <!-- 頂部商業導覽列 -->
+    <header>
+        <div class="brand-zone">
+            <div class="logo-box">E</div>
+            <div class="brand-title">
+                <h1>Enterprise Pro 旗艦專案排程整合系統</h1>
+                <p>仿 Monday & Jira 多維度階層化、相依性與雙模時間軸視窗</p>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button class="action-btn btn-auxiliary" onclick="exportDataJSON()">💾 備份專案數據 (JSON)</button>
+            <button class="action-btn btn-auxiliary" onclick="document.getElementById('fileImporter').click()">📂 載入封裝檔案</button>
+            <input type="file" id="fileImporter" style="display:none" accept=".json" onchange="importDataJSON(event)">
+        </div>
+    </header>
+
+    <!-- 頂部數據分析看板 -->
+    <div class="dashboard-grid">
+        <div class="stat-card" style="border-top: 4px solid var(--indigo-600);">
+            <div class="stat-label">總項目排程</div>
+            <div class="stat-value" id="dashTotal">0</div>
+        </div>
+        <div class="stat-card" style="border-top: 4px solid var(--emerald-600);">
+            <div class="stat-label">專案總進度率</div>
+            <div class="stat-value" id="dashProgress">0%</div>
+        </div>
+        <div class="stat-card" style="border-top: 4px solid var(--amber-600);">
+            <div class="stat-label">關鍵里程碑</div>
+            <div class="stat-value" id="dashMilestones">0</div>
+        </div>
+        <div class="stat-card" style="border-top: 4px solid var(--rose-600);">
+            <div class="stat-label">高風險延遲項目</div>
+            <div class="stat-value" id="dashOverdue">0</div>
+        </div>
+    </div>
+
+    <!-- 高階搜尋與視窗控制器 -->
+    <div class="control-bar">
+        <div class="search-filter-zone">
+            <input type="text" id="searchKeyword" class="search-input" placeholder="🔍 輸入關鍵字快速過濾..." oninput="renderAll()">
+            <select id="filterPriority" class="filter-select" onchange="renderAll()">
+                <option value="all">-- 所有優先級 --</option>
+                <option value="High">🔴 高優先度</option>
+                <option value="Medium">🟡 中優先度</option>
+                <option value="Low">🟢 低優先度</option>
+            </select>
+            <select id="filterStatus" class="filter-select" onchange="renderAll()">
+                <option value="all">-- 所有狀態 --</option>
+                <option value="progress">進行中</option>
+                <option value="pending">未開始</option>
+                <option value="completed">已完成</option>
+            </select>
+        </div>
+        
+        <!-- 時間軸刻度切換 (市場高階功能) -->
+        <div class="view-switcher">
+            <button id="scaleDay" class="view-btn active" onclick="changeTimelineScale('day')">日視窗 (精細)</button>
+            <button id="scaleWeek" class="view-btn" onclick="changeTimelineScale('week')">週視窗 (巨觀)</button>
+        </div>
+    </div>
+
+    <!-- 主動態操控面板卡片 -->
+    <div class="panel-card">
+        <div class="panel-header" id="formHeader">➕ 建立全新專案核心節點 / 衍生工作</div>
+        <form id="matrixForm" class="matrix-form" onsubmit="processFormSubmit(event)">
+            <div class="form-field" style="grid-column: span 2;">
+                <label for="name">工作或里程碑項目名稱</label>
+                <input type="text" id="name" required placeholder="請輸入項目名稱...">
+            </div>
+            <div class="form-field">
+                <label for="type">項目類型</label>
+                <select id="type" onchange="checkTypeConstraints()">
+                    <option value="task">標準工作任務</option>
+                    <option value="milestone">關鍵檢查里程碑</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="parentId">隸屬專案層級 (父項目)</label>
+                <select id="parentId"><option value="">-- 本身為最上層主專案 --</option></select>
+            </div>
+            <div class="form-field">
+                <label for="dependencyId">前置相依項目 (先導任務)</label>
+                <select id="dependencyId"><option value="">-- 無相依限制 --</option></select>
+            </div>
+            <div class="form-field">
+                <label for="start">開始日期</label>
+                <input type="date" id="start" required>
+            </div>
+            <div class="form-field">
+                <label for="end">預計結束日期</label>
+                <input type="date" id="end" required>
+            </div>
+            <div class="form-field">
+                <label for="priority">優先級別</label>
+                <select id="priority">
+                    <option value="Medium">中項目 (Medium)</option>
+                    <option value="High">高風險 (High)</option>
+                    <option value="Low">低輕緩 (Low)</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="status">目前執行狀態</label>
+                <select id="status">
+                    <option value="progress">進行中</option>
+                    <option value="pending">未開始</option>
+                    <option value="completed">已完成</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label for="progress">工作進度 (%)</label>
+                <input type="number" id="progress" min="0" max="100" value="0" required>
+            </div>
+            <div class="form-field" style="flex-direction: row; gap: 8px; align-items: flex-end;">
+                <button type="submit" class="action-btn btn-core" id="submitBtn" style="flex: 1; justify-content: center;">配置項目</button>
+                <button type="button" class="action-btn btn-auxiliary" id="cancelBtn" style="display: none;" onclick="clearForm()">取消</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 雙向聯動檢視主面板 -->
+    <div class="panel-card" style="padding: 0;">
+        <div class="split-gantt-workspace">
+            <div class="split-row">
+                <!-- 左半部：資訊樹狀表格 -->
+                <div class="split-cell-left">
+                    <table class="wbs-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 240px;">專案與任務名稱架構</th>
+                                <th style="width: 90px;">類型</th>
+                                <th style="width: 70px;">優先級</th>
+                                <th style="width: 85px; text-align: center;">數據管理</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wbsTableBody">
+                            <!-- 核心動態數據填入 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 右半部：同步滾動甘特圖 -->
+                <div class="split-cell-right">
+                    <div class="timeline-container" id="timelineContainer">
+                        <!-- 動態刻度生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 市面上最佳實踐之初始架構範本數據
+    let items = [
+        { id: "101", name: "✨ 跨平台 2.0 系統核心研發案", type: "task", parentId: "", dependencyId: "", start: "2026-07-01", end: "2026-07-20", priority: "High", status: "progress", progress: 65 },
+        { id: "102", name: "微服務底層架構部署", type: "task", parentId: "101", dependencyId: "", start: "2026-07-01", end: "2026-07-07", priority: "High", status: "completed", progress: 100 },
+        { id: "103", name: "資料加密與資安阻斷核心", type: "task", parentId: "101", dependencyId: "102", start: "2026-07-08", end: "2026-07-15", priority: "Medium", status: "progress", progress: 45 },
+        { id: "104", name: "底層全面壓力測試", type: "task", parentId: "101", dependencyId: "103", start: "2026-07-15", end: "2026-07-20", priority: "High", status: "pending", progress: 0 },
+        { id: "105", name: "🔒 國安級防護稽核點", type: "milestone", parentId: "101", dependencyId: "104", start: "2026-07-20", end: "2026-07-20", priority: "High", status: "pending", progress: 0 },
+        
+        { id: "201", name: "🚀 亞太區商業發布與對外行銷案", type: "task", parentId: "", dependencyId: "", start: "2026-07-12", end: "2026-07-28", priority: "Medium", status: "progress", progress: 20 },
+        { id: "202", name: "多國語系媒體新聞發布稿", type: "task", parentId: "201", dependencyId: "", start: "2026-07-12", end: "2026-07-18", priority: "Low", status: "progress", progress: 50 },
+        { id: "203", name: "線上萬人發布大會首播", type: "milestone", parentId: "201", dependencyId: "202", start: "2026-07-25", end: "2026-07-25", priority: "High", status: "pending", progress: 0 }
+    ];
+
+    let activeEditId = null;
+    let timelineScale = 'day'; // 'day' 或是 'week'
+
+    // 初始化當天與次週日期
+    function setFormDefaultDates() {
+        document.getElementById('start').value = "2026-07-01";
+        document.getElementById('end').value = "2026-07-08";
+    }
+
+    // 檢查里程碑特殊約束 (里程碑天數必然為0)
+    function checkTypeConstraints() {
+        const type = document.getElementById('type').value;
+        if (type === 'milestone') {
+            document.getElementById('end').value = document.getElementById('start').value;
+            document.getElementById('end').disabled = true;
+            document.getElementById('progress').value = 0;
+        } else {
+            document.getElementById('end').disabled = false;
+        }
+    }
+    
+    document.getElementById('start').addEventListener('change', () => {
+        if (document.getElementById('type').value === 'milestone') {
+            document.getElementById('end').value = document.getElementById('start').value;
+        }
+    });
+
+    // 軸線刻度變更
+    function changeTimelineScale(scale) {
+        timelineScale = scale;
+        document.getElementById('scaleDay').classList.toggle('active', scale === 'day');
+        document.getElementById('scaleWeek').classList.toggle('active', scale === 'week');
+        renderAll();
+    }
+
+    // 多維階層分析演算法
+    function getProcessedHierarchy() {
+        const keyword = document.getElementById('searchKeyword').value.toLowerCase();
+        const priorityFilter = document.getElementById('filterPriority').value;
+        const statusFilter = document.getElementById('filterStatus').value;
+
+        let filteredIds = new Set();
+        
+        items.forEach(item => {
+            let match = true;
+            if (keyword && !item.name.toLowerCase().includes(keyword)) match = false;
+            if (priorityFilter !== 'all' && item.priority !== priorityFilter) match = false;
+            if (statusFilter !== 'all' && item.status !== statusFilter) match = false;
+            if (match) filteredIds.add(item.id);
+        });
+
+        let sortedResult = [];
+        let pool = {};
+        items.forEach(item => { pool[item.id] = { ...item, subnodes: [] }; });
+        let topNodes = [];
+
+        Object.values(pool).forEach(node => {
+            if (node.parentId && pool[node.parentId]) {
+                pool[node.parentId].subnodes.push(node);
+            } else {
+                topNodes.push(node);
+            }
+        });
+
+        function scan(node, depth = 0) {
+            let containsValidChild = false;
+            
+            // 遞迴子層
+            node.subnodes.sort((a,b) => new Date(a.start) - new Date(b.start));
+            let subRenderList = [];
+            
+            node.subnodes.forEach(child => {
+                let isChildVisible = scan(child, depth + 1);
+                if (isChildVisible) containsValidChild = true;
+            });
+
+            node.depth = depth;
+            let currentValid = filteredIds.has(node.id) || containsValidChild;
+            
+            if (currentValid) {
+                sortedResult.push(node);
+            }
+            return currentValid;
+        }
+
+        topNodes.sort((a,b) => new Date(a.start) - new Date(b.start));
+        topNodes.forEach(root => scan(root, 0));
+
+        return sortedResult;
+    }
+
+    // 更新所有的關聯下拉選單 (避免修改時形成無限迴圈)
+    function refreshDropdowns() {
+        const parentSel = document.getElementById('parentId');
+        const depSel = document.getElementById('dependencyId');
+        
+        parentSel.innerHTML = '<option value="">-- 本身為最上層主專案 --</option>';
+        depSel.innerHTML = '<option value="">-- 無相依限制 --</option>';
+
+        items.forEach(item => {
+            if (activeEditId && item.id === activeEditId) return;
+            
+            let prefix = item.parentId ? "　└── " : "";
+            
+            const opt1 = document.createElement('option');
+            opt1.value = item.id;
+            opt1.textContent = prefix + item.name;
+            parentSel.appendChild(opt1);
+
+            const opt2 = document.createElement('option');
+            opt2.value = item.id;
+            opt2.textContent = item.name;
+            depSel.appendChild(opt2);
+        });
+    }
+
+    // 表單處理：新增與更新
+    function processFormSubmit(e) {
+        e.preventDefault();
+        const name = document.getElementById('name').value;
+        const type = document.getElementById('type').value;
+        const parentId = document.getElementById('parentId').value;
+        const dependencyId = document.getElementById('dependencyId').value;
+        const start = document.getElementById('start').value;
+        let end = document.getElementById('end').value;
+        const priority = document.getElementById('priority').value;
+        const status = document.getElementById('status').value;
+        const progress = parseInt(document.getElementById('progress').value);
+
+        if (type === 'milestone') end = start;
+
+        if (new Date(start) > new Date(end)) {
+            alert("⚠️ 系統錯訊：排程開始時間不得晚於結束時間！");
+            return;
+        }
+
+        if (activeEditId) {
+            const index = items.findIndex(t => t.id === activeEditId);
+            if (index !== -1) {
+                items[index] = { id: activeEditId, name, type, parentId, dependencyId, start, end, priority, status, progress };
+            }
+        } else {
+            const newItem = {
+                id: "ITEM_" + Date.now(),
+                name, type, parentId, dependencyId, start, end, priority, status, progress
+            };
+            items.push(newItem);
+        }
+
+        clearForm();
+        renderAll();
+    }
+
+    // 啟用修改狀態
+    function editItem(id) {
+        const target = items.find(t => t.id === id);
+        if (!target) return;
+
+        activeEditId = id;
+        document.getElementById('formHeader').textContent = `✏️ 正在進行修訂模式：${target.name}`;
+        document.getElementById('name').value = target.name;
+        document.getElementById('type').value = target.type;
+        
+        document.getElementById('end').disabled = (target.type === 'milestone');
+        
+        document.getElementById('start').value = target.start;
+        document.getElementById('end').value = target.end;
+        document.getElementById('priority').value = target.priority;
+        document.getElementById('status').value = target.status;
+        document.getElementById('progress').value = target.progress;
+
+        refreshDropdowns();
+        document.getElementById('parentId').value = target.parentId;
+        document.getElementById('dependencyId').value = target.dependencyId;
+
+        document.getElementById('submitBtn').textContent = "儲存變更";
+        document.getElementById('cancelBtn').style.display = "inline-flex";
+        
+        document.getElementById('matrixForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 刪除數據與關聯洗滌
+    function deleteItem(id) {
+        if (confirm("確定要將此項專案排程永久移除嗎？旗下關係子節點將自動浮動提升。")) {
+            items.forEach(t => {
+                if (t.parentId === id) t.parentId = "";
+                if (t.dependencyId === id) t.dependencyId = "";
+            });
+            items = items.filter(t => t.id !== id);
+            if (activeEditId === id) clearForm();
+            renderAll();
+        }
+    }
+
+    // 清除與重新配置
+    function clearForm() {
+        activeEditId = null;
+        document.getElementById('matrixForm').reset();
+        document.getElementById('end').disabled = false;
+        document.getElementById('formHeader').textContent = "➕ 建立全新專案核心節點 / 衍生工作";
+        document.getElementById('submitBtn').textContent = "配置項目";
+        document.getElementById('cancelBtn').style.display = "none";
+        setFormDefaultDates();
+        refreshDropdowns();
+    }
+
+    // 看板數據全面重算
+    function computeDashboardStats() {
+        document.getElementById('dashTotal').textContent = items.length;
+        
+        let milestoneCount = items.filter(t => t.type === 'milestone').length;
+        document.getElementById('dashMilestones').textContent = milestoneCount;
+
+        let totalProg = 0;
+        items.forEach(t => totalProg += t.progress);
+        let avgProg = items.length > 0 ? Math.round(totalProg / items.length) : 0;
+        document.getElementById('dashProgress').textContent = avgProg + "%";
+
+        let todayStr = new Date().toISOString().split('T')[0];
+        let overdueCount = items.filter(t => t.end < todayStr && t.status !== 'completed' && t.priority === 'High').length;
+        document.getElementById('dashOverdue').textContent = overdueCount;
+    }
+
+    // 核心渲染主功能
+    function renderAll() {
+        const renderList = getProcessedHierarchy();
+        refreshDropdowns();
+        computeDashboardStats();
+
+        // 1. 渲染左半側WBS樹狀表格
+        const tbody = document.getElementById('wbsTableBody');
+        tbody.innerHTML = '';
+
+        renderList.forEach(item => {
+            const tr = document.createElement('tr');
+            
+            let namePrefix = "";
+            if (item.depth > 0) {
+                namePrefix = "　".repeat(item.depth) + "└── ";
+            }
+
+            let typeLabel = item.type === 'milestone' 
+                ? `<span class="badge-ui badge-milestone">◆ 里程碑</span>`
+                : `<span class="badge-ui badge-task">■ 任務</span>`;
+
+            let priorityClass = `priority-${item.priority.toLowerCase()}`;
+            let priorityMap = { High: "高風險", Medium: "中等", Low: "低緩" };
+
+            tr.innerHTML = `
+                <td class="depth-${Math.min(item.depth, 2)}" title="${item.name}">${namePrefix}${item.name}</td>
+                <td>${typeLabel}</td>
+                <td class="${priorityClass}">${priorityMap[item.priority]}</td>
+                <td style="text-align:center;">
+                    <button class="op-btn" onclick="editItem('${item.id}')">✏️</button>
+                    <button class="op-btn" onclick="deleteItem('${item.id}')" style="color:var(--rose-600);">🗑️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // 2. 渲染右半側高階對齊甘特圖
+        const timelineWrapper = document.getElementById('timelineContainer');
+        if (renderList.length === 0) {
+            timelineWrapper.innerHTML = '';
+            return;
+        }
+
+        // 找出時間範圍
+        let minD = new Date(items[0].start);
+        let maxD = new Date(items[0].end);
+        items.forEach(t => {
+            const s = new Date(t.start);
+            const e = new Date(t.end);
+            if(s < minD) minD = s;
+            if(e > maxD) maxD = e;
+        });
+        minD.setDate(minD.getDate() - 2);
+        maxD.setDate(maxD.getDate() + 7);
+
+        // 產生時間結構陣列
+        const days = [];
+        let cur = new Date(minD);
+        while(cur <= maxD) {
+            days.push(new Date(cur));
+            cur.setDate(cur.getDate() + 1);
+        }
+
+        let tableHtml = '<table class="gantt-core-table"><thead><tr>';
+        
+        if (timelineScale === 'day') {
+            // 日視窗排版標題
+            days.forEach(d => {
+                const w = d.getDay();
+                const isWk = (w===0 || w===6);
+                const dayStr = ['日','一','二','三','四','五','六'][w];
+                tableHtml += `<th class="th-date-box ${isWk?'weekend-hdr':''}">${d.getMonth()+1}/${d.getDate()}<br>${dayStr}</th>`;
+            });
+        } else {
+            // 週視窗排版標題 (每7天跨度為一個單位)
+            for (let i = 0; i < days.length; i += 7) {
+                let d = days[i];
+                tableHtml += `<th class="th-date-box week-mode" colspan="7">W-${Math.floor(i/7)+1}<br><span style="font-size:9px; font-weight:normal;">${d.getMonth()+1}/${d.getDate()} 起</span></th>`;
+            }
+            // 補齊表格行格式對齊用的隱藏欄位數
+            let remainder = days.length % 7;
+            if (remainder > 0) {
+                tableHtml += `<th colspan="${remainder}">續</th>`;
+            }
+        }
+        
+        tableHtml += '</tr></thead><tbody>';
+
+        // 渲染每一行排程條
+        renderList.forEach(item => {
+            tableHtml += '<tr>';
+            
+            let startISO = new Date(item.start).toISOString().split('T')[0];
+            let endISO = new Date(item.end).toISOString().split('T')[0];
+
+            let startIdx = days.findIndex(d => d.toISOString().split('T')[0] === startISO);
+            let endIdx = days.findIndex(d => d.toISOString().split('T')[0] === endISO);
+
+            days.forEach((day, idx) => {
+                const w = day.getDay();
+                const isWk = (w===0 || w===6);
+                let cellClass = isWk ? 'weekend-cell' : '';
+
+                if (idx === startIdx) {
+                    let totalCells = endIdx - startIdx + 1;
+                    let baseWidth = timelineScale === 'day' ? 49 : 49; // 對齊CSS格寬度
+                    let elementWidth = (totalCells * baseWidth) - 10;
+
+                    tableHtml += `<td class="${cellClass}">
+                        <div class="bar-rel-container">`;
+
+                    if (item.type === 'milestone') {
+                        // 畫里程碑鑽石
+                        let compClass = item.status === 'completed' ? 'completed' : '';
+                        tableHtml += `<div class="gantt-milestone-diamond ${compClass}" title="${item.name}"></div>`;
+                    } else {
+                        // 畫任務進度條
+                        tableHtml += `
+                            <div class="gantt-bar-item ${item.status}" style="width: ${elementWidth}px;">
+                                <div class="gantt-bar-progress" style="width: ${item.progress}%;"></div>
+                                <span style="position:relative; z-index:4;">${item.progress}%</span>
+                            </div>
+                        `;
+                    }
+
+                    // 渲染先導相依標籤說明文字
+                    if (item.dependencyId) {
+                        let depTask = items.find(x => x.id === item.dependencyId);
+                        if (depTask) {
+                            tableHtml += `<span class="dependency-line-text">⛓️ 承接: ${depTask.name}</span>`;
+                        }
+                    }
+
+                    tableHtml += `</div></td>`;
+                } else if (idx > startIdx && idx <= endIdx) {
+                    tableHtml += `<td class="${cellClass}"></td>`;
+                } else {
+                    tableHtml += `<td class="${cellClass}"></td>`;
+                }
+            });
+
+            tableHtml += '</tr>';
+        });
+
+        tableHtml += '</tbody></table>';
+        timelineWrapper.innerHTML = tableHtml;
+    }
+
+    // 匯出 JSON 資料封裝備份
+    function exportDataJSON() {
+        const str = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(items, null, 2));
+        const a = document.createElement('a');
+        a.href = str;
+        a.download = `Enterprise_Pro_Gantt_Data_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    }
+
+    // 匯入 JSON 還原資料
+    function importDataJSON(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const parsed = JSON.parse(evt.target.result);
+                if (Array.isArray(parsed)) {
+                    items = parsed;
+                    clearForm();
+                    renderAll();
+                    alert("🎉 企業級專案數據與相依排程同步載入成功！");
+                } else {
+                    alert("檔案格式不合，必須是高階甘特圖的標準 JSON 結構。");
+                }
+            } catch (err) {
+                alert("讀取失敗，請確認是否為本系統匯出之 JSON 檔案。");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // 當前運行初始化
+    setFormDefaultDates();
+    refreshDropdowns();
+    renderAll();
+</script>
+
+</body>
+</html>
